@@ -1,0 +1,34 @@
+{
+  "cost_weights": {
+    "human_handling": 1.0,
+    "incorrect_auto_reply": 3.0,
+    "missed_escalation": 10.0
+  },
+  "agent": {
+    "total_cost": 354.0,
+    "cost_per_ticket": 1.77,
+    "breakdown": {
+      "human_review": 93,
+      "incorrect_auto_reply": 7,
+      "missed_escalation": 24
+    }
+  },
+  "simple_baseline": {
+    "total_cost": 493.0,
+    "cost_per_ticket": 2.46,
+    "breakdown": {
+      "human_review": 26,
+      "incorrect_auto_reply": 39,
+      "missed_escalation": 35
+    }
+  },
+  "trivial_baseline": {
+    "total_cost": 929.0,
+    "cost_per_ticket": 4.64,
+    "breakdown": {
+      "human_review": 0,
+      "incorrect_auto_reply": 113,
+      "missed_escalation": 59
+    }
+  }
+}

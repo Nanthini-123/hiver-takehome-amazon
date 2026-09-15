@@ -1,0 +1,55 @@
+{
+  "agent": {
+    "intent_accuracy": 0.78,
+    "intent_accuracy_ci": [
+      0.7249,
+      0.835
+    ],
+    "macro_f1": 0.7738,
+    "macro_f1_ci": [
+      0.7104,
+      0.8252
+    ],
+    "escalation_precision": 0.3763,
+    "escalation_recall": 0.5932,
+    "false_negative_rate": 0.4068,
+    "automation_rate": 0.535,
+    "judge_score_mean": 8.54,
+    "judge_score_median": 8.0,
+    "judge_score_std": 0.83
+  },
+  "simple_baseline": {
+    "intent_accuracy": 0.725,
+    "intent_accuracy_ci": [
+      0.665,
+      0.785
+    ],
+    "macro_f1": 0.717,
+    "macro_f1_ci": [
+      0.6539,
+      0.7746
+    ],
+    "escalation_precision": 0.9231,
+    "escalation_recall": 0.4068,
+    "false_negative_rate": 0.5932,
+    "automation_rate": 0.87,
+    "judge_score_mean": 6.8
+  },
+  "trivial_baseline": {
+    "intent_accuracy": 0.2,
+    "intent_accuracy_ci": [
+      0.145,
+      0.26
+    ],
+    "macro_f1": 0.0556,
+    "macro_f1_ci": [
+      0.0422,
+      0.0688
+    ],
+    "escalation_precision": 0.0,
+    "escalation_recall": 0.0,
+    "false_negative_rate": 1.0,
+    "automation_rate": 1.0,
+    "judge_score_mean": 4.2
+  }
+}

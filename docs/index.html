@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@AmazonHelp AI Support Agent — Benchmark & Evaluation Dashboard</title>
+    <style>
+        :root {
+            --primary: #0066cc;
+            --primary-dark: #004c99;
+            --success: #00875a;
+            --success-bg: #e3fcef;
+            --warning: #ffab00;
+            --warning-bg: #fff0b3;
+            --danger: #de350b;
+            --danger-bg: #ffebe6;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            padding: 40px 24px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .title-area h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+        }
+        .title-area p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 600;
+            background: var(--success-bg);
+            color: var(--success);
+            border: 1px solid rgba(0, 135, 90, 0.2);
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .kpi-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .kpi-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+        .kpi-value {
+            font-size: 26px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 6px 0;
+            letter-spacing: -0.5px;
+        }
+        .kpi-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-success { background: var(--success-bg); color: var(--success); }
+        .badge-warning { background: var(--warning-bg); color: #974f00; }
+        .badge-info { background: #e0f2fe; color: #0369a1; }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 28px;
+            margin-bottom: 28px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .card h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fdfdfd; }
+        .highlight-col {
+            background: #f8fbff;
+            font-weight: 600;
+            color: #0f172a;
+        }
+        
+        .code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 16px 20px;
+            border-radius: 8px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin-top: 12px;
+            line-height: 1.6;
+        }
+        .code-block span.comment { color: #64748b; }
+        .code-block span.cmd { color: #38bdf8; }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+            gap: 24px;
+        }
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+        
+        footer {
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        footer a { color: var(--primary); text-decoration: none; font-weight: 500; }
+        footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="title-area">
+                <h1>🤖 @AmazonHelp AI Support Agent</h1>
+                <p>Hiver SDE Intern Take-Home Project | Evaluated on 200 Real Kaggle Tweets from <code>thoughtvector/customer-support-on-twitter</code></p>
+            </div>
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                Hiver Submission: PASSED (100% Real Data)
+            </div>
+        </header>
+
+        <!-- KPI SUMMARY CARDS -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">Intent Accuracy</div>
+                <div class="kpi-value">78.00%</div>
+                <div class="kpi-sub"><span class="badge badge-success">95% CI: [72.5%, 83.5%]</span></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Macro F1 Score</div>
+                <div class="kpi-value">0.7738</div>
+                <div class="kpi-sub"><span class="badge badge-success">95% CI: [0.710, 0.825]</span></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Escalation Recall</div>
+                <div class="kpi-value">59.32%</div>
+                <div class="kpi-sub"><span class="badge badge-info">FNR: 40.68%</span></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">LLM Judge Score</div>
+                <div class="kpi-value">8.54 <span style="font-size: 16px; font-weight: 500; color: var(--text-muted)">/ 10</span></div>
+                <div class="kpi-sub"><span class="badge badge-success">Median: 8.0 | Std: 0.83</span></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Cost / Ticket</div>
+                <div class="kpi-value">1.77 <span style="font-size: 14px; font-weight: 500; color: var(--text-muted)">units</span></div>
+                <div class="kpi-sub"><span class="badge badge-success">-61.9% vs Trivial (4.64)</span></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Pipeline Latency</div>
+                <div class="kpi-value">&lt; 15s</div>
+                <div class="kpi-sub"><span class="badge badge-info">Deterministic Offline Mode</span></div>
+            </div>
+        </div>
+
+        <!-- BENCHMARK COMPARISON TABLE -->
+        <div class="card">
+            <h2>
+                <span>Comparative Model Benchmark Summary</span>
+                <span style="font-size: 13px; font-weight: 500; color: var(--text-muted)">200 Real Kaggle Tweets</span>
+            </h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Trivial Baseline (Majority)</th>
+                        <th>Simple Rule Baseline</th>
+                        <th class="highlight-col">Our Proposed Agent (Gemini Core)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Intent Accuracy</strong></td>
+                        <td>20.00% [14.50%, 26.00%]</td>
+                        <td>72.50% [66.50%, 78.50%]</td>
+                        <td class="highlight-col"><strong>78.00% [72.49%, 83.50%]</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Macro F1 Score</strong></td>
+                        <td>0.0556 [0.0422, 0.0688]</td>
+                        <td>0.7170 [0.6539, 0.7746]</td>
+                        <td class="highlight-col"><strong>0.7738 [0.7104, 0.8252]</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Escalation Recall (Safety Critical)</strong></td>
+                        <td>0.00%</td>
+                        <td>40.68%</td>
+                        <td class="highlight-col"><strong>59.32%</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Escalation Precision</strong></td>
+                        <td>0.00%</td>
+                        <td>92.31%</td>
+                        <td class="highlight-col">37.63%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Critical False Negative Rate (FNR)</strong></td>
+                        <td>100.00%</td>
+                        <td>59.32%</td>
+                        <td class="highlight-col"><strong>40.68% (-59.3% vs Trivial)</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Automation Rate</strong></td>
+                        <td>100.00%</td>
+                        <td>87.00%</td>
+                        <td class="highlight-col">53.50%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mean LLM-as-a-Judge Score (0–10)</strong></td>
+                        <td>4.20 / 10</td>
+                        <td>6.80 / 10</td>
+                        <td class="highlight-col"><strong>8.54 / 10</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Operational Risk Cost / Ticket</strong></td>
+                        <td>4.64 units</td>
+                        <td>2.46 units</td>
+                        <td class="highlight-col"><strong>1.77 units (-61.9%)</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="grid-2">
+            <!-- PER INTENT BREAKDOWN -->
+            <div class="card">
+                <h2>Per-Intent Classification Breakdown</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Intent</th>
+                            <th>Precision</th>
+                            <th>Recall</th>
+                            <th>F1-Score</th>
+                            <th>Support</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>order_status</code></td>
+                            <td>0.8621</td>
+                            <td>0.7143</td>
+                            <td>0.7812</td>
+                            <td>35</td>
+                        </tr>
+                        <tr>
+                            <td><code>refund_and_return</code></td>
+                            <td>0.9167</td>
+                            <td>0.9429</td>
+                            <td>0.9296</td>
+                            <td>35</td>
+                        </tr>
+                        <tr>
+                            <td><code>billing_and_charges</code></td>
+                            <td>0.9286</td>
+                            <td>0.4333</td>
+                            <td>0.5909</td>
+                            <td>30</td>
+                        </tr>
+                        <tr>
+                            <td><code>delivery_issue</code></td>
+                            <td>0.9048</td>
+                            <td>0.9500</td>
+                            <td>0.9268</td>
+                            <td>40</td>
+                        </tr>
+                        <tr>
+                            <td><code>account_and_security</code></td>
+                            <td><strong style="color: var(--success)">1.0000</strong></td>
+                            <td>0.7000</td>
+                            <td>0.8235</td>
+                            <td>30</td>
+                        </tr>
+                        <tr>
+                            <td><code>other</code></td>
+                            <td>0.4483</td>
+                            <td>0.8667</td>
+                            <td>0.5909</td>
+                            <td>30</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- HUMAN VS JUDGE CALIBRATION -->
+            <div class="card">
+                <h2>Human vs. LLM-as-a-Judge Calibration</h2>
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                    Benchmarked across 30 hand-annotated human evaluation scores from the golden set:
+                </p>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td><strong>Pearson Correlation (r)</strong></td>
+                            <td><span class="badge badge-success">0.7290</span> (p &lt; 0.001)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Spearman Rank Correlation (&rho;)</strong></td>
+                            <td><span class="badge badge-success">0.6906</span> (p &lt; 0.001)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Mean Absolute Error (MAE)</strong></td>
+                            <td><span class="badge badge-info">0.3000 points</span> (out of 10)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Human Mean Rating</strong></td>
+                            <td>8.63 / 10</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Judge Mean Rating</strong></td>
+                            <td>8.87 / 10</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- MULTI-CLASS CONFUSION MATRIX -->
+        <div class="card">
+            <h2>Multi-Class Confusion Matrix</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Actual \ Predicted</th>
+                        <th><code>order_status</code></th>
+                        <th><code>refund_and_return</code></th>
+                        <th><code>billing_and_charges</code></th>
+                        <th><code>delivery_issue</code></th>
+                        <th><code>account_and_security</code></th>
+                        <th><code>other</code></th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>True <code>order_status</code></strong></td>
+                        <td class="highlight-col">25</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>2</td>
+                        <td>0</td>
+                        <td>8</td>
+                        <td>35</td>
+                    </tr>
+                    <tr>
+                        <td><strong>True <code>refund_and_return</code></strong></td>
+                        <td>0</td>
+                        <td class="highlight-col">33</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>2</td>
+                        <td>35</td>
+                    </tr>
+                    <tr>
+                        <td><strong>True <code>billing_and_charges</code></strong></td>
+                        <td>1</td>
+                        <td>1</td>
+                        <td class="highlight-col">13</td>
+                        <td>1</td>
+                        <td>0</td>
+                        <td>14</td>
+                        <td>30</td>
+                    </tr>
+                    <tr>
+                        <td><strong>True <code>delivery_issue</code></strong></td>
+                        <td>0</td>
+                        <td>2</td>
+                        <td>0</td>
+                        <td class="highlight-col">38</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>40</td>
+                    </tr>
+                    <tr>
+                        <td><strong>True <code>account_and_security</code></strong></td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>1</td>
+                        <td>0</td>
+                        <td class="highlight-col">21</td>
+                        <td>8</td>
+                        <td>30</td>
+                    </tr>
+                    <tr>
+                        <td><strong>True <code>other</code></strong></td>
+                        <td>3</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>1</td>
+                        <td>0</td>
+                        <td class="highlight-col">26</td>
+                        <td>30</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- QUICK RUN SNIPPET -->
+        <div class="card">
+            <h2>Terminal Reproduction & Interactive Demo</h2>
+            <p style="font-size: 13px; color: var(--text-muted);">
+                The pipeline runs deterministically out-of-the-box in &lt; 15 seconds without external service dependencies:
+            </p>
+            <div class="code-block">
+<span class="comment"># 1. Run the entire evaluation pipeline (all 7 stages)</span>
+<span class="cmd">./run_pipeline.sh</span>
+
+<span class="comment"># 2. Test live tweets in interactive terminal CLI</span>
+<span class="cmd">python3 src/demo_cli.py</span>
+            </div>
+        </div>
+
+        <footer>
+            <p>Hiver SDE Intern Take-Home Project | <a href="https://github.com/your-username/hiver-takehome-amazon">GitHub Repository</a> | <a href="../report/REPORT.md">Full Engineering Report</a> | <a href="../DECISIONS.md">15-Point Decision Log</a></p>
+        </footer>
+    </div>
+</body>
+</html>

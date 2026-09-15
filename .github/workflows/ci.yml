@@ -1,0 +1,40 @@
+name: Hiver AI Agent Pipeline CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Full Pipeline Check
+        run: |
+          chmod +x run_pipeline.sh
+          ./run_pipeline.sh
+
+      - name: Verify Generated Artifacts
+        run: |
+          python -c "
+          import json, os
+          assert os.path.exists('results/metrics.json'), 'Metrics missing!'
+          assert os.path.exists('results/human_vs_judge.json'), 'Judge agreement missing!'
+          assert os.path.exists('results/confusion_matrix.csv'), 'Confusion matrix missing!'
+          assert os.path.exists('results/cost_analysis.json'), 'Cost analysis missing!'
+          print('CI Artifact Verification PASSED!')
+          "

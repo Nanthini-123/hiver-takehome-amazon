@@ -1,0 +1,10 @@
+{
+  "sample_size": 30,
+  "pearson_correlation": 0.729,
+  "pearson_p_value": 5e-06,
+  "spearman_correlation": 0.6906,
+  "spearman_p_value": 2.4e-05,
+  "mean_absolute_error": 0.3,
+  "human_score_mean": 8.63,
+  "judge_score_mean": 8.87
+}
