@@ -1,3 +1,43 @@
+# Large raw datasets (must never be committed to Git)
 data/raw/twcs.csv
+data/raw/*.csv
+data/raw/*.zip
+data/raw/*.tar.gz
+!data/raw/README.md
+
+# Python cache & artifacts
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.env
+
+# System artifacts
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

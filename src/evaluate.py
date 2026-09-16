@@ -3,8 +3,10 @@ Automated evaluation harness for @AmazonHelp customer support agents.
 Calculates Accuracy, Macro F1, 95% Bootstrap Confidence Intervals,
 Escalation Precision/Recall/FNR, Automation Rate, and runs the 5-dimension
 LLM-as-Judge evaluation on agent responses.
+Supports CLI arguments for custom golden set and predictions paths.
 """
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -22,15 +24,31 @@ from llm_client import GeminiClient
 
 def bootstrap_confidence_intervals(y_true, y_pred, n_bootstraps=1000, ci=95):
     """Calculates 95% bootstrap confidence intervals for Accuracy and Macro F1."""
+    if len(y_true) < 5:
+        acc = accuracy_score(y_true, y_pred)
+        f1 = f1_score(y_true, y_pred, average="macro", zero_division=0)
+        return {
+            "accuracy_ci": [round(float(acc), 4), round(float(acc), 4)],
+            "macro_f1_ci": [round(float(f1), 4), round(float(f1), 4)]
+        }
+
     rng = np.random.RandomState(42)
     boot_accs, boot_f1s = [], []
 
     for _ in range(n_bootstraps):
         indices = rng.randint(0, len(y_true), len(y_true))
-        if len(set(np.array(y_true)[indices])) < 2:
-            continue
-        boot_accs.append(accuracy_score(np.array(y_true)[indices], np.array(y_pred)[indices]))
-        boot_f1s.append(f1_score(np.array(y_true)[indices], np.array(y_pred)[indices], average="macro", zero_division=0))
+        sub_true = np.array(y_true)[indices]
+        sub_pred = np.array(y_pred)[indices]
+        boot_accs.append(accuracy_score(sub_true, sub_pred))
+        boot_f1s.append(f1_score(sub_true, sub_pred, average="macro", zero_division=0))
+
+    if not boot_accs:
+        acc = accuracy_score(y_true, y_pred)
+        f1 = f1_score(y_true, y_pred, average="macro", zero_division=0)
+        return {
+            "accuracy_ci": [round(float(acc), 4), round(float(acc), 4)],
+            "macro_f1_ci": [round(float(f1), 4), round(float(f1), 4)]
+        }
 
     alpha = (100 - ci) / 2.0
     acc_lower, acc_upper = np.percentile(boot_accs, alpha), np.percentile(boot_accs, 100 - alpha)
@@ -42,28 +60,38 @@ def bootstrap_confidence_intervals(y_true, y_pred, n_bootstraps=1000, ci=95):
     }
 
 
-def run_evaluation():
-    with open(GOLDEN_SET_PATH, "r", encoding="utf-8") as f:
+def run_evaluation(
+    golden_set_path: Path = GOLDEN_SET_PATH,
+    predictions_path: Path = PREDICTIONS_PATH,
+    baseline_predictions_path: Path = BASELINE_PREDICTIONS_PATH,
+    output_metrics_path: Path = METRICS_PATH
+):
+    with open(golden_set_path, "r", encoding="utf-8") as f:
         golden = {json.loads(line)["thread_id"]: json.loads(line) for line in f if line.strip()}
 
-    with open(PREDICTIONS_PATH, "r", encoding="utf-8") as f:
+    with open(predictions_path, "r", encoding="utf-8") as f:
         agent_preds = [json.loads(line) for line in f if line.strip()]
 
-    with open(BASELINE_PREDICTIONS_PATH, "r", encoding="utf-8") as f:
+    with open(baseline_predictions_path, "r", encoding="utf-8") as f:
         baseline_preds = {json.loads(line)["thread_id"]: json.loads(line) for line in f if line.strip()}
 
-    y_true_intent = [golden[p["thread_id"]]["gold_intent"] for p in agent_preds]
-    y_pred_intent = [p["predicted_intent"] for p in agent_preds]
+    # Filter to matching IDs
+    valid_preds = [p for p in agent_preds if p["thread_id"] in golden and p["thread_id"] in baseline_preds]
+    if not valid_preds:
+        raise ValueError("No matching predictions found between golden set and predictions file.")
 
-    y_true_dec = [golden[p["thread_id"]]["gold_decision"] for p in agent_preds]
-    y_pred_dec = [p["predicted_decision"] for p in agent_preds]
+    y_true_intent = [golden[p["thread_id"]]["gold_intent"] for p in valid_preds]
+    y_pred_intent = [p["predicted_intent"] for p in valid_preds]
+
+    y_true_dec = [golden[p["thread_id"]]["gold_decision"] for p in valid_preds]
+    y_pred_dec = [p["predicted_decision"] for p in valid_preds]
 
     # Baselines setup
-    triv_intents = [baseline_preds[p["thread_id"]]["trivial"]["intent"] for p in agent_preds]
-    triv_decs = [baseline_preds[p["thread_id"]]["trivial"]["decision"] for p in agent_preds]
+    triv_intents = [baseline_preds[p["thread_id"]]["trivial"]["intent"] for p in valid_preds]
+    triv_decs = [baseline_preds[p["thread_id"]]["trivial"]["decision"] for p in valid_preds]
 
-    simp_intents = [baseline_preds[p["thread_id"]]["simple"]["intent"] for p in agent_preds]
-    simp_decs = [baseline_preds[p["thread_id"]]["simple"]["decision"] for p in agent_preds]
+    simp_intents = [baseline_preds[p["thread_id"]]["simple"]["intent"] for p in valid_preds]
+    simp_decs = [baseline_preds[p["thread_id"]]["simple"]["decision"] for p in valid_preds]
 
     def compute_metrics(y_t_i, y_p_i, y_t_d, y_p_d):
         acc = accuracy_score(y_t_i, y_p_i)
@@ -99,8 +127,8 @@ def run_evaluation():
         judge_template = f.read()
 
     judge_scores = []
-    print("[evaluate] Running 5-dimension LLM-as-Judge evaluation on agent responses...")
-    for p in tqdm(agent_preds, desc="LLM Judge Scoring"):
+    print(f"[evaluate] Running 5-dimension LLM-as-Judge evaluation on {len(valid_preds)} responses...")
+    for p in tqdm(valid_preds, desc="LLM Judge Scoring"):
         gold_rep = golden[p["thread_id"]]["gold_reply"]
         prompt = judge_template.replace(
             "{customer_text}", p["customer_text"]
@@ -134,13 +162,25 @@ def run_evaluation():
         "trivial_baseline": trivial_metrics
     }
 
-    METRICS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(METRICS_PATH, "w", encoding="utf-8") as f:
+    output_metrics_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_metrics_path, "w", encoding="utf-8") as f:
         json.dump(final_results, f, indent=2)
 
-    print(f"\n[evaluate] Evaluation complete. Summary metrics written to {METRICS_PATH}:")
+    print(f"\n[evaluate] Evaluation complete. Summary metrics written to {output_metrics_path}:")
     print(json.dumps(final_results, indent=2))
 
 
 if __name__ == "__main__":
-    run_evaluation()
+    parser = argparse.ArgumentParser(description="Evaluate @AmazonHelp AI Support Agent")
+    parser.add_argument("--golden_set", type=str, default=str(GOLDEN_SET_PATH), help="Path to golden evaluation set")
+    parser.add_argument("--predictions", type=str, default=str(PREDICTIONS_PATH), help="Path to agent predictions file")
+    parser.add_argument("--baselines", type=str, default=str(BASELINE_PREDICTIONS_PATH), help="Path to baseline predictions file")
+    parser.add_argument("--output", type=str, default=str(METRICS_PATH), help="Path to write output metrics.json")
+    args = parser.parse_args()
+
+    run_evaluation(
+        golden_set_path=Path(args.golden_set),
+        predictions_path=Path(args.predictions),
+        baseline_predictions_path=Path(args.baselines),
+        output_metrics_path=Path(args.output)
+    )

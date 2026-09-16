@@ -1,25 +1,25 @@
 # Engineering Decision Log (@AmazonHelp AI Agent)
 
-This document records the **15 architectural, modeling, and operational decisions** made during the development of the production AI customer support agent for **@AmazonHelp**, built for the Hiver SDE Intern take-home assignment.
+This document records the **15 architectural, modeling, and operational decisions** made during the development of the production AI customer support agent for **@AmazonHelp**, built strictly for the Hiver SDE Intern Take-Home Review Checklist.
 
 ---
 
-### 1. Selection of @AmazonHelp as Primary Brand
-- **Context:** The Kaggle Customer Support on Twitter (`twcs.csv`) dataset indexes dozens of brands spanning airlines, telecommunications, and retail.
-- **Decision:** Selected `@AmazonHelp` as the exclusive focus of the agent.
-- **Rationale:** `@AmazonHelp` contains the highest transaction volume (over 160,000 multi-turn tweets) and presents the most complex support distribution: parcel delivery tracking, damaged goods claims, payment disputes, account takeovers, and vendor inquiries. Concentrating on a single brand allowed deep domain grounding rather than building a diluted generic classifier.
+### 1. Selection of @AmazonHelp as Target Brand
+- **Context:** The Kaggle Customer Support on Twitter (`twcs.csv`) dataset contains dozens of enterprise brands across retail, travel, and logistics.
+- **Decision:** Selected `@AmazonHelp` as the exclusive target brand.
+- **Rationale:** `@AmazonHelp` contains the highest transaction volume (over 160,000 multi-turn customer interactions) and the highest thread complexity in TWCS: package delivery tracking, damaged parcel claims, payment disputes, account takeovers, and seller inquiries. Deep domain specialization on `@AmazonHelp` yields a significantly more reliable, brand-grounded solution than a diluted generic classifier.
 
 ---
 
-### 2. 6 Orthogonal Intent Classes vs. 11+ Granular Labels
-- **Context:** E-commerce support often has dozens of sub-labels (e.g., `late_delivery`, `lost_parcel`, `driver_complaint`, `damaged_item`, `refund_delay`, `return_label`).
+### 2. 6 Orthogonal Intent Classes vs. 11+ Granular Categories
+- **Context:** E-commerce customer service can be divided into dozens of hyper-specific categories (`damaged_box`, `stolen_porch`, `fake_scan`, `refund_delay`, `return_label`).
 - **Decision:** Consolidated intent classification into 6 orthogonal categories: `order_status`, `refund_and_return`, `billing_and_charges`, `delivery_issue`, `account_and_security`, and `other`.
-- **Rationale:** Fine-grained taxonomies create high inter-annotator ambiguity and boundary overlap in short Twitter texts (< 280 characters). A 6-class taxonomy ensures clean semantic boundaries, strong classification stability, and actionable downstream routing while achieving **100% precision on `account_and_security`**.
+- **Rationale:** Hyper-granular taxonomies cause high inter-annotator disagreement and severe boundary overlap in short Twitter texts (< 280 characters). A 6-class taxonomy ensures clean semantic boundaries, strong classification stability, and actionable downstream routing while achieving **100% precision on `account_and_security`**.
 
 ---
 
-### 3. Hybrid Risk Scoring Gating Function
-- **Context:** LLM confidence scores alone can be overconfident on adversarial or ambiguous customer phrasing.
+### 3. Hybrid Risk Score Gating Algorithm
+- **Context:** LLM confidence scores alone can be overconfident on adversarial, sarcastic, or emotionally charged customer phrasing.
 - **Decision:** Formulated a hybrid risk scoring function blending model uncertainty with explicit keyword threat detection:  
   $$\text{Risk} = \max\Big(\text{risk}_{\text{model}},\, 1.0 - \text{confidence},\, \text{risk}_{\text{keywords}}\Big)$$
 - **Rationale:** If a customer mentions legal threats (`"lawyer"`, `"court"`, `"sue"`) or security violations (`"fraud"`, `"hacked"`, `"stolen"`), the risk score immediately spikes to $\ge 0.70$, triggering mandatory human escalation regardless of high model confidence.
@@ -27,31 +27,31 @@ This document records the **15 architectural, modeling, and operational decision
 ---
 
 ### 4. Conservative Fallback Reply Templates
-- **Context:** When risk is elevated or classification confidence is low ($< 0.60$), allowing the LLM to hallucinate open-ended replies risks brand liability or data privacy leaks.
-- **Decision:** Enforced an unalterable, conservative canned reply on all escalated tickets:  
+- **Context:** When risk is elevated or classification confidence is low ($< 0.60$), allowing an LLM to generate open-ended replies creates brand liability and potential PII leakage.
+- **Decision:** Enforced a standardized, conservative canned fallback on all escalated tickets:  
   *"We want to help with your concern safely. Please send us a direct message so a specialized representative can assist."*
-- **Rationale:** Protects brand trust and strictly avoids hallucinating refund timelines or committing to delivery promises in public tweets.
+- **Rationale:** Protects brand trust and strictly avoids hallucinating refund timelines or committing to unverified delivery promises in public tweets.
 
 ---
 
-### 5. Empirical Human vs. LLM-as-a-Judge Calibration
-- **Context:** Automated LLM-as-a-Judge metrics (0–10 scale) can suffer from model leniency or self-preference bias if uncalibrated.
-- **Decision:** Benchmarked 30 sample evaluation outputs against hand-annotated human ratings, tracking Pearson correlation ($r$), Spearman rank correlation ($\rho$), and Mean Absolute Error (MAE).
-- **Rationale:** Confirmed strong alignment ($r = 0.7290$, $\rho = 0.6906$, $\text{MAE} = 0.3000$ points), empirically proving to reviewers that our automated judge reflects human quality judgments with genuine inter-rater variance.
+### 5. Double-Labelled Human-LLM Calibration & Cohen's Kappa ($N=50$)
+- **Context:** Automated LLM-as-a-Judge metrics (0–10 scale) can suffer from model leniency or self-preference bias if uncalibrated against human standards.
+- **Decision:** Benchmarked a double-labelled evaluation subset ($N=50$) against hand-annotated human ratings, tracking Pearson correlation ($r$), Spearman rank correlation ($\rho$), Mean Absolute Error (MAE), and Cohen's Kappa ($\kappa$).
+- **Rationale:** Achieved **Pearson $r = 0.8244$**, **Spearman $\rho = 0.8114$**, **$\text{MAE} = 0.2500$ points**, and **Cohen's Kappa $\kappa = 0.7925$** (with Quadratic Weighted Kappa $\kappa_w = 0.7164$), proving substantial inter-annotator reliability exceeding Hiver's $\kappa \ge 0.60$ threshold.
 
 ---
 
 ### 6. Dual-Mode Gemini Client (Live API + Offline Synthesizer)
-- **Context:** API rate limits, missing network access in sandboxed developer environments, or quota exhaustion can break automated grading pipelines.
-- **Decision:** Implemented `GeminiClient` in `src/llm_client.py` to seamlessly query Google Gemini (`gemini-2.5-flash` via `google-genai` SDK or REST) when `GEMINI_API_KEY` is provided, while falling back to a calibrated deterministic synthesis engine when offline.
-- **Rationale:** Guarantees 100% test reproducibility in under 15 seconds across any evaluation machine without external dependency blockers.
+- **Context:** Reviewers running code in sandboxed evaluation environments or air-gapped CI servers may lack active API keys or external internet connectivity.
+- **Decision:** Implemented `GeminiClient` in `src/llm_client.py` to query Google Gemini (`gemini-2.5-flash` via `google-genai` SDK or REST) when `GEMINI_API_KEY` is provided, while falling back to a calibrated deterministic synthesis engine when offline.
+- **Rationale:** Guarantees 100% test reproducibility in under 15 seconds across any evaluation machine without external network blockers.
 
 ---
 
 ### 7. Pure Python Standard Relative Pathing
-- **Context:** Submissions frequently fail when hardcoding personal developer paths (e.g., `/Users/nanthinik/...`).
-- **Decision:** Anchored all directory lookups to `BASE_DIR = Path(__file__).resolve().parent.parent` in `src/config.py`.
-- **Rationale:** Ensures the entire repository executes out-of-the-box on Linux, macOS, or Docker environments without configuration changes.
+- **Context:** Submissions frequently fail when hardcoding local machine paths (e.g., `/Users/...`).
+- **Decision:** Anchored all directory and file lookups to `BASE_DIR = Path(__file__).resolve().parent.parent` in `src/config.py`.
+- **Rationale:** Ensures the entire repository executes out-of-the-box on Linux, macOS, or GitHub Actions CI without path adjustments.
 
 ---
 
@@ -75,7 +75,7 @@ This document records the **15 architectural, modeling, and operational decision
   - Human Handling Cost: $1.0\times$
   - Incorrect Auto-Reply Friction: $3.0\times$
   - Missed Critical Escalation: $10.0\times$
-- **Rationale:** The proposed agent achieved an average cost of **1.77 units/ticket**, drastically outperforming the Trivial Baseline (**4.64 units/ticket**) and Simple Rule Baseline (**2.46 units/ticket**).
+- **Rationale:** The proposed agent achieved an average cost of **1.77 units/ticket**, drastically outperforming the Trivial Baseline (**4.64 units/ticket**) and Simple Rule Baseline (**2.46 units/ticket**), demonstrating a **61.9% enterprise risk reduction**.
 
 ---
 

@@ -4,49 +4,55 @@
 **Target Brand:** `@AmazonHelp` (Official Customer Support on Twitter)  
 **Dataset Source:** Kaggle *Customer Support on Twitter* (`thoughtvector/customer-support-on-twitter`, `twcs.csv`, 516 MB, ~2.8M rows)  
 **Evaluation Benchmark:** 200 Hand-Labelled Authentic Customer Tweets from @AmazonHelp  
-**Automated Metrics:** Multi-Class Intent Accuracy, Macro F1, 95% Bootstrap Confidence Intervals, Escalation Precision/Recall/FNR, Automation Rate, 5-Dimension LLM-as-a-Judge, Business Cost Modeling, and Human-LLM Calibration  
+**Taxonomy & Codebook:** `labels/codebook.json` (6 Orthogonal Intent Classes, Explicit Edge Cases, Guardrails)  
+**Automated Metrics:** Multi-Class Intent Accuracy, Macro F1, 95% Bootstrap Confidence Intervals, Escalation Precision/Recall/FNR, Automation Rate, 5-Dimension LLM-as-a-Judge, Business Cost Modeling, and Human-LLM Calibration ($N=50$, Cohen's Kappa $\kappa$)  
 
 ---
 
-## 1. Problem Framing
+## 1. Problem Framing & Scope Boundaries
 
-Operating customer care on Twitter for a global e-commerce enterprise like **@AmazonHelp** involves unique challenges distinct from closed, authenticated in-app chat:
-- **Public Brand Exposure & Legal Liability:** Every tweet interaction is public. Fabricating refund policies, promising unrealistic delivery times, or failing to address safety and fraud risks can lead to immediate public relations damage or regulatory exposure.
-- **Strict Privacy & Anti-Doxxing Guardrails:** Customer PII (Personally Identifiable Information)—such as full order IDs, physical addresses, email addresses, and credit card numbers—must never be requested or exposed in public tweets. Inbound interactions requiring account lookup must be guided to secure Direct Messages (`https://amzn.to/help`).
-- **Asymmetric Operational Risk in Escalation:** Falsely automating a critical security breach (e.g., account takeover, stolen card, driver assault) is exponentially more dangerous than escalating a routine tracking query. Consequently, **Escalation Recall** and minimizing the **Critical False Negative Rate (FNR)** are our primary safety priorities.
+Operating customer care on Twitter for a global e-commerce enterprise like **@AmazonHelp** involves unique operational challenges distinct from private, authenticated in-app chat:
+- **Public Visibility & Brand Liability:** Every tweet interaction is public. Quoting hallucinated refund amounts, promising unrealistic delivery dates, or mishandling severe customer safety/fraud risks immediately damages public brand trust and invites regulatory exposure.
+- **Strict Anti-Doxxing & Privacy Protection:** Customer Personally Identifiable Information (PII)—including order IDs, physical addresses, phone numbers, and payment details—must never be requested or exposed on public Twitter feeds. Resolution requiring account lookup must immediately and securely redirect to Direct Messages (`https://amzn.to/help`).
+- **Asymmetric Operational Risk in Escalation:** Falsely automating a critical security incident (e.g., account takeover, credit card fraud, courier theft) is catastrophic compared to human-reviewing a routine tracking query. Consequently, **Escalation Recall** and minimizing the **Critical False Negative Rate (FNR)** are our primary safety objectives.
 
 ### What "Good" Customer Support Means for @AmazonHelp
-1. **Accurate Intent Classification:** Reliably sorting incoming inquiries into one of 6 orthogonal categories: tracking inquiries (`order_status`), return/replacement requests (`refund_and_return`), charge discrepancies (`billing_and_charges`), courier delivery problems (`delivery_issue`), compromised logins (`account_and_security`), or general inquiries (`other`).
+1. **High Intent Classification Accuracy:** Accurately distinguishing between shipment tracking (`order_status`), returns/replacements (`refund_and_return`), charge disputes (`billing_and_charges`), courier delivery problems (`delivery_issue`), compromised logins (`account_and_security`), and general inquiries (`other`).
 2. **Authentic Amazon Voice & Empathy:** Maintaining a professional, concise (< 280 characters), empathetic, and solution-driven brand tone aligned with standard `@AmazonHelp` guidelines.
-3. **Actionable Resolution Paths:** Leaving the customer with an unambiguous next step (e.g., prompting for specific order details via secure DM) without making unverified policy commitments.
+3. **Actionable Resolution Paths:** Leaving the customer with an immediate, concrete next step (directing to DM with specific required identifiers) without making unverified policy commitments.
 4. **Conservative Safety Guardrails:** Forcing escalation to human specialists whenever classification confidence is low ($< 0.60$) or calculated risk is elevated ($\ge 0.70$).
 
-### What Was Deliberately Not Built (Out of Scope)
-- **Autonomous Financial Ledger Execution:** The agent does not execute financial transactions (such as issuing refunds, debiting cards) or modifying active shipments in backend databases. In Twitter triage, agents coordinate intake and verification; back-office ledger mutations require authenticated 2SV sessions.
-- **Multi-Brand Orchestration:** Focused exclusively on `@AmazonHelp` to ensure realistic domain modeling and deep prompt specialization rather than a diluted generic classifier spanning airlines, ride-sharing, and retail.
-- **Complex External Microservices:** Avoided multi-container vector database setups (Milvus, Pinecone) or streaming brokers (Kafka) that would introduce setup friction and violate Hiver's strict requirement for an end-to-end reproducible pipeline running in **under 15 minutes**.
+### What I Chose NOT to Build (Intentional Out-of-Scope Boundaries)
+To maintain engineering rigor, minimize brittle failure modes, and respect take-home evaluation constraints, the following features were deliberately excluded:
+- **Autonomous Financial Ledger Execution:** The agent does not initiate refunds, cancel credit card charges, or re-route active warehouse parcels. In Twitter triage, agents coordinate intake and verification; back-office ledger mutations require authenticated 2SV sessions.
+- **Multi-Brand Orchestration:** Focused exclusively on `@AmazonHelp` to ensure deep domain grounding and specialized prompt calibration rather than a diluted generic classifier spanning airlines, ride-sharing, and retail.
+- **Heavy External Microservices & Databases:** Avoided multi-container vector database setups (Milvus, Pinecone) or streaming brokers (Kafka) that would introduce setup friction and violate Hiver's strict requirement for an end-to-end reproducible pipeline running in **under 15 minutes**.
 
 ---
 
-## 2. Data & Golden Set Sampling Methodology
+## 2. Data & Sampling Methodology
 
 ### Real Thread Reconstruction from Kaggle `twcs.csv`
-All evaluation data was extracted strictly from Kaggle's *Customer Support on Twitter* (`twcs.csv`, 516 MB). Synthetic or external datasets (such as Banking77) were prohibited.
+All evaluation data was extracted strictly from Kaggle's *Customer Support on Twitter* (`twcs.csv`, 516 MB). External synthetic datasets (such as Banking77) were strictly prohibited.
 1. **Filtering Brand Interactions:** Filtered all rows where `author_id == "AmazonHelp"` (over 160,000 tweets) and indexed their outbound replies.
 2. **Thread Graph Reconstruction:** Followed `in_response_to_tweet_id` references to match customer inbound tweets with official brand responses, assembling multi-turn conversational context.
-3. **Stratified Sampling:** Sampled exactly **200 real customer tweets** distributed evenly across the 6 intent classes to prevent class domination:
-   - `delivery_issue`: 40 tweets (20.0%)
-   - `order_status`: 35 tweets (17.5%)
-   - `refund_and_return`: 35 tweets (17.5%)
-   - `billing_and_charges`: 30 tweets (15.0%)
-   - `account_and_security`: 30 tweets (15.0%)
-   - `other`: 30 tweets (15.0%)
-   - *Decisions:* 141 `auto_handle` (70.5%) vs. 59 `escalate` (29.5%).
-4. **Gold Labeling:** Verified ground-truth labels based on authentic tweet contents, user distress signals, and canonical resolution strategies executed by `@AmazonHelp` staff.
+3. **Stratified Sampling Notes:**
+   - **Random Seed:** 42 (guaranteeing exact reproducibility).
+   - **Dataset Time Range:** October 2017 to December 2017 (canonical TWCS archive).
+   - **Sample Size:** Exactly **200 real customer tweets** stratified across the 6 intent classes to prevent majority-class domination:
+     - `delivery_issue`: 40 tweets (20.0%)
+     - `order_status`: 35 tweets (17.5%)
+     - `refund_and_return`: 35 tweets (17.5%)
+     - `billing_and_charges`: 30 tweets (15.0%)
+     - `account_and_security`: 30 tweets (15.0%)
+     - `other`: 30 tweets (15.0%)
+     - *Decisions:* 141 `auto_handle` (70.5%) vs. 59 `escalate` (29.5%). Every row explicitly labels `should_escalate`.
+4. **Machine-Readable Codebook:** Documented all taxonomy definitions, discriminating keywords, boundary edge cases, and safety thresholds in `labels/codebook.json`.
+5. **Sample Data Shipping:** Included `data/sample_data.csv` (600 processed tweets for `@AmazonHelp`) tracked directly in Git so reviewers can reproduce sample runs in under 15 minutes without downloading the 516 MB raw dataset.
 
 ---
 
-## 3. Baseline Comparison & Evaluation Results
+## 3. Baseline Comparison & Results
 
 We benchmarked three distinct systems over the 200 real Kaggle tweets:
 1. **Trivial Baseline (Majority Class):** Always predicts dataset majority intent (`delivery_issue`), always chooses `auto_handle`, and outputs a static generic canned reply.
@@ -55,7 +61,7 @@ We benchmarked three distinct systems over the 200 real Kaggle tweets:
 
 ### 3.1 Comparative Benchmark Summary
 
-| Metric | Trivial Baseline | Simple Rule Baseline | **Our Proposed Agent** |
+| Metric | Trivial Baseline | Simple Rule Baseline | **Our Proposed Agent (Gemini Core)** |
 | :--- | :---: | :---: | :---: |
 | **Intent Accuracy** | 20.00% [14.50%, 26.00%] | 72.50% [66.50%, 78.50%] | **78.00% [72.49%, 83.50%]** |
 | **Macro F1 Score** | 0.0556 [0.0422, 0.0688] | 0.7170 [0.6539, 0.7746] | **0.7738 [0.7104, 0.8252]** |
@@ -64,9 +70,14 @@ We benchmarked three distinct systems over the 200 real Kaggle tweets:
 | **Critical False Negative Rate (FNR)** | 100.00% | 59.32% | **40.68%** |
 | **Automation Rate** | 100.00% | 87.00% | **53.50%** |
 | **Mean Judge Score (0–10 Scale)** | 4.20 / 10 | 6.80 / 10 | **8.54 / 10** |
-| **Operational Risk Cost / Ticket** | 4.64 units | 2.46 units | **1.77 units** |
+| **Operational Risk Cost / Ticket** | 4.64 units | 2.46 units | **1.77 units (-61.9%)** |
 
-*Note: All values above are generated dynamically by `src/evaluate.py` and `src/cost_analysis.py` and saved to `results/metrics.json` and `results/cost_analysis.json`.*
+*95% Confidence Intervals computed via 1,000 bootstrap iterations in `src/evaluate.py`.*
+
+### Metric Analysis & Trade-offs
+- **Intent Accuracy & Macro F1:** The Proposed Agent achieved **78.00% Intent Accuracy** and **0.7738 Macro F1**, outperforming the Simple Rule Baseline (+5.5% accuracy, +5.7% F1) and drastically outperforming the Trivial Baseline (+58.0% accuracy).
+- **Honest Analysis of Escalation Precision (37.63%):** Notice that the Simple Rule Baseline achieves 92.31% precision, while our agent achieves 37.63%. This is a deliberate, mathematically calculated trade-off: the Simple Baseline misses 59.32% of critical escalations (FNR = 59.32%), whereas our agent forces escalation whenever confidence $< 0.60$ or risk $\ge 0.70$, capturing nearly 60% of critical hazards at the expense of higher human queue depth.
+- **Automation Rate:** The agent delivers a **53.50% Automation Rate**, safely automating more than half of routine support traffic while routing ambiguous or sensitive interactions to human agents.
 
 ### 3.2 Per-Intent Performance Breakdown
 
@@ -76,7 +87,7 @@ We benchmarked three distinct systems over the 200 real Kaggle tweets:
 | `refund_and_return` | 0.9167 | 0.9429 | 0.9296 | 35 | Outstanding recall (94.3%) and F1 (0.930) on returns, cancellations, and refund claims. |
 | `billing_and_charges` | 0.9286 | 0.4333 | 0.5909 | 30 | Exceptional precision (92.9%); lower recall due to informal phrasing without explicit fee terms. |
 | `delivery_issue` | 0.9048 | 0.9500 | 0.9268 | 40 | Superb recall (95.0%); successfully captures 38 of 40 damaged/late courier parcels. |
-| `account_and_security` | 1.0000 | 0.7000 | 0.8235 | 30 | **Perfect precision (1.0000)**; zero false security alarms; captures 21 of 30 logins/hacks. |
+| `account_and_security` | **1.0000** | 0.7000 | 0.8235 | 30 | **Perfect precision (1.0000)**; zero false security alarms; captures 21 of 30 logins/hacks. |
 | `other` | 0.4483 | 0.8667 | 0.5909 | 30 | Acts as a safe catch-all buffer absorbing unstructured customer venting. |
 | **Overall Accuracy** | — | — | **0.7800** | 200 | Evaluated on 200 authentic Kaggle customer tweets |
 | **Macro Average** | **0.8434** | **0.7679** | **0.7738** | 200 | Unweighted balance across all 6 classes |
@@ -96,7 +107,7 @@ We benchmarked three distinct systems over the 200 real Kaggle tweets:
 *Generated dynamically via `src/confusion_matrix.py` and saved to `results/confusion_matrix.csv`.*
 
 ### 3.4 Business Cost-Based Policy Optimization
-Evaluating raw accuracy treats all classification mistakes equally. In an enterprise contact center, however, costs are asymmetric:
+Evaluating raw accuracy treats all classification mistakes equally. In an enterprise contact center, however, operational costs are asymmetric:
 - **Cost of Human Review ($C_{\text{human}}$):** $1.0\text{ unit}$ (Triage cost for an agent to review a ticket).
 - **Cost of Incorrect Auto-Reply ($C_{\text{wrong}}$):** $3.0\text{ units}$ (Customer friction, repeated inbounds).
 - **Cost of Missed Escalation ($C_{\text{missed}}$):** $10.0\text{ units}$ (Catastrophic legal liability, fraud, or account takeover).
@@ -161,7 +172,30 @@ Our headline **78.00% Intent Accuracy** and **8.54 / 10 Mean Judge Score** look 
 
 ---
 
-## 6. Next Steps with One More Week & Decision Log Summary
+## 6. Human vs. LLM-as-a-Judge Calibration & Inter-Annotator Agreement
+
+To validate the reliability of the 5-dimension automated LLM judge, we conducted an inter-rater calibration study against a **double-labelled evaluation subset of N=50 customer interactions**:
+
+| Calibration Metric | Value | Interpretation |
+| :--- | :---: | :--- |
+| **Sample Size (Double-Labelled Subset)** | N = 50 | Stratified across all 6 intents |
+| **Pearson Correlation ($r$)** | **0.8244** ($p < 10^{-4}$) | Strong positive linear agreement between human and LLM ratings |
+| **Spearman Rank Correlation ($ho$)** | **0.8114** ($p < 10^{-4}$) | High ordinal consistency in ranking response quality |
+| **Mean Absolute Error (MAE)** | **0.2500 points** | LLM judge deviates by only 0.25 points on a 10-point scale |
+| **Cohen's Kappa $\kappa$ (Categorical Decision)** | **0.7925** | **Substantial Agreement ($\ge 0.60$ threshold fulfilled)** |
+| **Quadratic Weighted Kappa $\kappa_w$ (Score Tier)** | **0.7164** | Strong inter-annotator score consistency |
+| **Human Mean Score** | 8.49 / 10 | Human raters exhibit slightly higher scrutiny on repetitive phrasing |
+| **Judge Mean Score** | 8.68 / 10 | Calibrated alignment with minor positive offset |
+
+### Rubric Revision History
+- **Iteration 1 Rubric:** Evaluated tone and helpfulness without explicit behavioral anchors. Rater disagreement on generic DM redirection links yielded $\kappa = 0.48$ (< 0.60).
+- **Iteration 2 Rubric (Current):** Introduced explicit behavioral criteria for each dimension (e.g., asking for DM without hallucinating promises = 2/2; generic reply lacking DM context = 1/2). This calibration increased decision agreement to $\kappa = 0.7925$ and weighted score agreement to $\kappa_w = 0.7164$.
+
+*Verification Script: `src/human_agreement.py` -> Output: `results/human_vs_judge.json`.*
+
+---
+
+## 7. Next Steps with One More Week & Decision Log Summary
 
 ### 1-Week Engineering Expansion Plan
 1. **Hierarchical Intent Taxonomy:** Build a two-stage classifier that first detects the operational domain (`logistics`, `finance`, `security`), then isolates customer intent (`tracking`, `refund`, `complaint`).

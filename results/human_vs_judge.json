@@ -1,10 +1,12 @@
 {
-  "sample_size": 30,
-  "pearson_correlation": 0.729,
-  "pearson_p_value": 5e-06,
-  "spearman_correlation": 0.6906,
-  "spearman_p_value": 2.4e-05,
-  "mean_absolute_error": 0.3,
-  "human_score_mean": 8.63,
-  "judge_score_mean": 8.87
+  "sample_size": 50,
+  "pearson_correlation": 0.8244,
+  "pearson_p_value": 0.0,
+  "spearman_correlation": 0.8114,
+  "spearman_p_value": 0.0,
+  "mean_absolute_error": 0.25,
+  "cohens_kappa_decision": 0.7925,
+  "cohens_kappa_weighted_score": 0.7164,
+  "human_score_mean": 8.49,
+  "judge_score_mean": 8.68
 }

@@ -1,0 +1,106 @@
+{
+  "brand": "AmazonHelp",
+  "dataset_source": "Kaggle Customer Support on Twitter (thoughtvector/customer-support-on-twitter)",
+  "version": "1.0.0",
+  "sampling_methodology": {
+    "random_seed": 42,
+    "total_golden_examples": 200,
+    "time_range": "2017-10 to 2017-12 (Authentic TWCS range)",
+    "stratification_quotas": {
+      "delivery_issue": 40,
+      "order_status": 35,
+      "refund_and_return": 35,
+      "billing_and_charges": 30,
+      "account_and_security": 30,
+      "other": 30
+    },
+    "decision_distribution": {
+      "auto_handle": 141,
+      "escalate": 59
+    }
+  },
+  "intent_taxonomy": [
+    {
+      "intent": "order_status",
+      "definition": "Inquiries regarding package tracking, shipment progress, estimated arrival times, carrier handoffs, or expected delivery dates for in-transit orders.",
+      "keywords": ["where is", "when will", "track", "tracking", "status", "shipment", "shipped", "in transit", "out for delivery", "eta", "expected date", "delayed"],
+      "edge_cases": [
+        "If the customer inquires where an overdue package is but does NOT claim courier misconduct, classify as order_status.",
+        "If the customer mentions a missed delivery date with severe venting or claims false delivery scan, route to delivery_issue or escalate."
+      ],
+      "recommended_action": "Acknowledge tracking inquiry, apologize for uncertainty, request order ID and account email via secure Direct Message (DM) to inspect carrier telemetry."
+    },
+    {
+      "intent": "refund_and_return",
+      "definition": "Requests for item returns, exchange procedures, replacement orders, refund timing, prepaid drop-off labels, or cancellation of existing orders.",
+      "keywords": ["refund", "return", "exchange", "send back", "drop off", "ups drop", "money back", "label", "cancelled", "cancel order", "replacement"],
+      "edge_cases": [
+        "If customer received a damaged item and explicitly asks for a refund or replacement, classify as refund_and_return if the primary request is financial/return resolution.",
+        "If customer received a damaged item and primarily complains about courier handling, classify as delivery_issue."
+      ],
+      "recommended_action": "Guide customer on Amazon standard return policy, provide return portal link or request order ID via DM to generate prepaid return authorization."
+    },
+    {
+      "intent": "billing_and_charges",
+      "definition": "Disputes or questions regarding unexpected credit card charges, duplicate deductions, Prime membership fees, payment processing failures, or incorrect invoices.",
+      "keywords": ["charged", "charge", "billing", "bill", "double charge", "deducted", "fee", "credit card", "prime membership charge", "unauthorized charge", "bank", "invoice"],
+      "edge_cases": [
+        "If a charge is claimed to be completely unauthorized or fraudulent on an unknown card, classify as billing_and_charges and escalate immediately.",
+        "If the customer questions an unexpected Prime renewal, classify as billing_and_charges with standard DM review."
+      ],
+      "recommended_action": "Reassure customer, never confirm or quote monetary amounts publicly, prompt for order ID and registered email via DM for account ledger verification."
+    },
+    {
+      "intent": "delivery_issue",
+      "definition": "Reports of late, missing, stolen, damaged, misdelivered parcels, driver misconduct, or incorrect address drops by Amazon Logistics (AMZL) or partner carriers.",
+      "keywords": ["delivered", "courier", "driver", "porch", "shattered", "broken", "damaged", "empty box", "neighbor", "wrong address", "not delivered", "haven't received", "stolen", "crushed", "package missing"],
+      "edge_cases": [
+        "If package is marked 'delivered' by AMZL but customer cannot locate it, classify as delivery_issue.",
+        "If courier driver behavior was hostile or dangerous, classify as delivery_issue and escalate immediately."
+      ],
+      "recommended_action": "Express deep empathy for damaged or missing shipments, advise checking safe locations/neighbors, and request tracking details via secure DM for carrier investigation."
+    },
+    {
+      "intent": "account_and_security",
+      "definition": "Customer inquiries regarding forgotten passwords, account locks, two-factor authentication (2SV/OTP) failures, suspicious logins, hijacked accounts, or privacy concerns.",
+      "keywords": ["login", "password", "otp", "hacked", "account locked", "compromised", "suspended", "security code", "sign in", "reset password", "two factor", "2fa"],
+      "edge_cases": [
+        "If customer mentions someone else logged into their account, classify as account_and_security and escalate with highest priority.",
+        "If customer cannot log in to check order tracking, prioritize account_and_security as the root blocking constraint."
+      ],
+      "recommended_action": "Treat with maximum security urgency; never attempt to unlock accounts over Twitter; immediately direct customer to secure account recovery links and escalate to Security Operations."
+    },
+    {
+      "intent": "other",
+      "definition": "General brand feedback, praise, seller inquiries, partner promotions, feature requests, or vague customer messages not fitting the 5 operational categories.",
+      "keywords": ["feedback", "suggestion", "app", "website", "seller", "customer service", "help", "thanks", "hello"],
+      "edge_cases": [
+        "Unintelligible or multi-topic venting tweets without clear action items should be buffered in other to prevent misclassification of core operations."
+      ],
+      "recommended_action": "Politely thank customer for reaching out to @AmazonHelp and invite them to describe their concern via DM."
+    }
+  ],
+  "safety_and_escalation_policy": {
+    "escalation_decision_rules": {
+      "force_escalate_conditions": [
+        "Presence of high-risk keywords: fraud, lawyer, attorney, sue, court, legal, hacked, stolen, unauthorized, police, scam",
+        "Account security threats or unauthorized financial transactions",
+        "Severe customer distress or chronic repeated contact ('already called 3 times', 'keeps happening')",
+        "Model classification confidence below confidence_threshold (0.60)",
+        "Composite risk score at or above risk_threshold (0.70)"
+      ],
+      "auto_handle_conditions": [
+        "Intent classification confidence >= 0.60",
+        "Composite risk score < 0.70",
+        "No high-risk keywords present",
+        "Standard procedural inquiry with safe, DM-redirected resolution path"
+      ]
+    },
+    "thresholds": {
+      "confidence_threshold": 0.60,
+      "risk_threshold": 0.70
+    },
+    "risk_scoring_formula": "Risk = max(risk_model, 1.0 - confidence, keyword_risk)",
+    "fallback_response": "We want to help with your concern safely. Please send us a direct message so a specialized representative can assist."
+  }
+}

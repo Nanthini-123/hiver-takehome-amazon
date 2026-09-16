@@ -1,32 +1,402 @@
 {
-  "amz_real_652": 7.0,
-  "amz_real_13164": 9.0,
-  "amz_real_17899": 8.0,
-  "amz_real_18128": 9.0,
-  "amz_real_22537": 9.0,
-  "amz_real_19459": 8.0,
-  "amz_real_46530": 9.0,
-  "amz_real_62159": 8.5,
-  "amz_real_62297": 9.0,
-  "amz_real_63826": 8.0,
-  "amz_real_64214": 9.0,
-  "amz_real_65665": 8.5,
-  "amz_real_616": 9.0,
-  "amz_real_634": 9.0,
-  "amz_real_646": 8.5,
-  "amz_real_645": 8.0,
-  "amz_real_670": 9.0,
-  "amz_real_2549": 9.0,
-  "amz_real_5128": 9.0,
-  "amz_real_5331": 9.0,
-  "amz_real_9146": 8.0,
-  "amz_real_10321": 8.5,
-  "amz_real_11593": 9.5,
-  "amz_real_11602": 9.0,
-  "amz_real_11619": 8.0,
-  "amz_real_13185": 7.0,
-  "amz_real_13189": 9.0,
-  "amz_real_15279": 10.0,
-  "amz_real_15688": 8.5,
-  "amz_real_16433": 9.0
+  "amz_real_652": {
+    "thread_id": "amz_real_652",
+    "human_score": 7.0,
+    "judge_score": 8.0,
+    "human_decision": "escalate",
+    "agent_decision": "escalate",
+    "gold_decision": "escalate"
+  },
+  "amz_real_13164": {
+    "thread_id": "amz_real_13164",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "escalate"
+  },
+  "amz_real_17899": {
+    "thread_id": "amz_real_17899",
+    "human_score": 8.0,
+    "judge_score": 8.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "escalate"
+  },
+  "amz_real_18128": {
+    "thread_id": "amz_real_18128",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "escalate"
+  },
+  "amz_real_22537": {
+    "thread_id": "amz_real_22537",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "escalate"
+  },
+  "amz_real_19459": {
+    "thread_id": "amz_real_19459",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "escalate"
+  },
+  "amz_real_46530": {
+    "thread_id": "amz_real_46530",
+    "human_score": 8.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "escalate"
+  },
+  "amz_real_62159": {
+    "thread_id": "amz_real_62159",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "escalate",
+    "agent_decision": "auto_handle",
+    "gold_decision": "escalate"
+  },
+  "amz_real_62297": {
+    "thread_id": "amz_real_62297",
+    "human_score": 8.5,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "escalate"
+  },
+  "amz_real_63826": {
+    "thread_id": "amz_real_63826",
+    "human_score": 8.0,
+    "judge_score": 8.0,
+    "human_decision": "escalate",
+    "agent_decision": "escalate",
+    "gold_decision": "escalate"
+  },
+  "amz_real_64214": {
+    "thread_id": "amz_real_64214",
+    "human_score": 10.0,
+    "judge_score": 10.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "escalate"
+  },
+  "amz_real_65665": {
+    "thread_id": "amz_real_65665",
+    "human_score": 8.0,
+    "judge_score": 8.0,
+    "human_decision": "escalate",
+    "agent_decision": "escalate",
+    "gold_decision": "escalate"
+  },
+  "amz_real_616": {
+    "thread_id": "amz_real_616",
+    "human_score": 8.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_634": {
+    "thread_id": "amz_real_634",
+    "human_score": 9.5,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_646": {
+    "thread_id": "amz_real_646",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_645": {
+    "thread_id": "amz_real_645",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_670": {
+    "thread_id": "amz_real_670",
+    "human_score": 8.5,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_2549": {
+    "thread_id": "amz_real_2549",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_5128": {
+    "thread_id": "amz_real_5128",
+    "human_score": 8.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_5331": {
+    "thread_id": "amz_real_5331",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "escalate",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_9146": {
+    "thread_id": "amz_real_9146",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_10321": {
+    "thread_id": "amz_real_10321",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_11593": {
+    "thread_id": "amz_real_11593",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_11602": {
+    "thread_id": "amz_real_11602",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_11619": {
+    "thread_id": "amz_real_11619",
+    "human_score": 7.0,
+    "judge_score": 8.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_13185": {
+    "thread_id": "amz_real_13185",
+    "human_score": 8.0,
+    "judge_score": 8.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_13189": {
+    "thread_id": "amz_real_13189",
+    "human_score": 9.5,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_15279": {
+    "thread_id": "amz_real_15279",
+    "human_score": 10.0,
+    "judge_score": 10.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_15688": {
+    "thread_id": "amz_real_15688",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_16433": {
+    "thread_id": "amz_real_16433",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_16107": {
+    "thread_id": "amz_real_16107",
+    "human_score": 8.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_17183": {
+    "thread_id": "amz_real_17183",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "escalate",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_17903": {
+    "thread_id": "amz_real_17903",
+    "human_score": 8.5,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_18120": {
+    "thread_id": "amz_real_18120",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_18122": {
+    "thread_id": "amz_real_18122",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_18150": {
+    "thread_id": "amz_real_18150",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_18173": {
+    "thread_id": "amz_real_18173",
+    "human_score": 8.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_18177": {
+    "thread_id": "amz_real_18177",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_18174": {
+    "thread_id": "amz_real_18174",
+    "human_score": 9.0,
+    "judge_score": 9.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_19117": {
+    "thread_id": "amz_real_19117",
+    "human_score": 8.5,
+    "judge_score": 8.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "auto_handle"
+  },
+  "amz_real_22468": {
+    "thread_id": "amz_real_22468",
+    "human_score": 7.5,
+    "judge_score": 8.0,
+    "human_decision": "escalate",
+    "agent_decision": "escalate",
+    "gold_decision": "escalate"
+  },
+  "amz_real_35844": {
+    "thread_id": "amz_real_35844",
+    "human_score": 8.0,
+    "judge_score": 8.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "auto_handle",
+    "gold_decision": "escalate"
+  },
+  "amz_real_63988": {
+    "thread_id": "amz_real_63988",
+    "human_score": 7.0,
+    "judge_score": 8.0,
+    "human_decision": "escalate",
+    "agent_decision": "escalate",
+    "gold_decision": "escalate"
+  },
+  "amz_real_63994": {
+    "thread_id": "amz_real_63994",
+    "human_score": 8.0,
+    "judge_score": 8.0,
+    "human_decision": "auto_handle",
+    "agent_decision": "escalate",
+    "gold_decision": "escalate"
+  },
+  "amz_real_64042": {
+    "thread_id": "amz_real_64042",
+    "human_score": 8.0,
+    "judge_score": 8.0,
+    "human_decision": "escalate",
+    "agent_decision": "escalate",
+    "gold_decision": "escalate"
+  },
+  "amz_real_63993": {
+    "thread_id": "amz_real_63993",
+    "human_score": 8.0,
+    "judge_score": 8.0,
+    "human_decision": "escalate",
+    "agent_decision": "escalate",
+    "gold_decision": "escalate"
+  },
+  "amz_real_69692": {
+    "thread_id": "amz_real_69692",
+    "human_score": 8.0,
+    "judge_score": 8.0,
+    "human_decision": "escalate",
+    "agent_decision": "escalate",
+    "gold_decision": "escalate"
+  },
+  "amz_real_69815": {
+    "thread_id": "amz_real_69815",
+    "human_score": 7.0,
+    "judge_score": 7.0,
+    "human_decision": "escalate",
+    "agent_decision": "escalate",
+    "gold_decision": "escalate"
+  },
+  "amz_real_74582": {
+    "thread_id": "amz_real_74582",
+    "human_score": 7.0,
+    "judge_score": 8.0,
+    "human_decision": "escalate",
+    "agent_decision": "escalate",
+    "gold_decision": "escalate"
+  },
+  "amz_real_75839": {
+    "thread_id": "amz_real_75839",
+    "human_score": 8.0,
+    "judge_score": 8.0,
+    "human_decision": "escalate",
+    "agent_decision": "escalate",
+    "gold_decision": "escalate"
+  }
 }

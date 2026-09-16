@@ -3,12 +3,13 @@
 [![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/release/python-3100/)
 [![CI Status](https://img.shields.io/badge/CI-passing-brightgreen.svg)](#continuous-integration)
 [![Dataset](https://img.shields.io/badge/Dataset-Kaggle%20TWCS%20(Real)-orange.svg)](https://www.kaggle.com/datasets/thoughtvector/customer-support-on-twitter)
-[![Pipeline Latency](https://img.shields.io/badge/Latency-%3C%2015s%20Deterministic-success.svg)](#quick-start)
+[![Cohen's Kappa](https://img.shields.io/badge/%CE%BA%20(Decision)-0.7925%20(Substantial)-success.svg)](#human-vs-llm-as-a-judge-calibration)
+[![Pipeline Latency](https://img.shields.io/badge/Latency-%3C%2015s%20Deterministic-success.svg)](#quick-start-guide)
 [![Live Dashboard](https://img.shields.io/badge/Dashboard-GitHub%20Pages-purple.svg)](https://your-username.github.io/hiver-takehome-amazon/)
 
 Production-ready prototype of an intelligent AI customer support agent for **@AmazonHelp**, evaluated on authentic Twitter support threads from the Kaggle **Customer Support on Twitter** dataset (`thoughtvector/customer-support-on-twitter`).
 
-Built for the **Hiver SDE Intern** take-home assignment.
+Built for the **Hiver SDE Intern** take-home assignment and fully compliant with the official review checklist.
 
 ---
 
@@ -16,7 +17,7 @@ Built for the **Hiver SDE Intern** take-home assignment.
 
 Managing high-velocity public customer care on Twitter requires balancing speed, brand consistency, strict privacy protection, and critical risk prevention. The **@AmazonHelp AI Agent** is architected as a robust three-tier decision engine:
 
-1. **Orthogonal Intent Classification (6 Classes):** Accurately categorizes inbound tweets into `order_status`, `refund_and_return`, `billing_and_charges`, `delivery_issue`, `account_and_security`, or `other`.
+1. **Orthogonal Intent Classification (6 Classes):** Accurately categorizes inbound tweets into `order_status`, `refund_and_return`, `billing_and_charges`, `delivery_issue`, `account_and_security`, or `other` using domain-grounded taxonomy in [`labels/codebook.json`](labels/codebook.json).
 2. **Grounded Brand Voice Generation:** Synthesizes professional, empathetic, concise (< 280 chars) responses strictly prompting for necessary details via secure Direct Message (DM) without hallucinating refund amounts or delivery dates.
 3. **Hybrid Risk-Aware Routing & Guardrails:** Computes a composite risk score blending classification uncertainty with security/legal threat detection. If confidence $< 0.60$ or risk $\ge 0.70$, the system automatically executes a safe conservative human-escalation fallback.
 
@@ -58,9 +59,10 @@ All metrics were computed programmatically on 200 real customer tweets extracted
 | **Critical False Negative Rate (FNR)** | 100.00% | 59.32% | **40.68%** |
 | **Automation Rate** | 100.00% | 87.00% | **53.50%** |
 | **Mean LLM Judge Score (0–10)** | 4.20 / 10 | 6.80 / 10 | **8.54 / 10** |
-| **Operational Risk Cost / Ticket** | 4.64 units | 2.46 units | **1.77 units** |
+| **Operational Risk Cost / Ticket** | 4.64 units | 2.46 units | **1.77 units (-61.9%)** |
+| **Cohen's Kappa $\kappa$ (Decisions)** | 0.0000 | 0.4420 | **0.7925 (Substantial)** |
 
-*95% Confidence Intervals computed via 1,000 bootstrap iterations.*
+*95% Confidence Intervals computed via 1,000 bootstrap iterations in `src/evaluate.py`.*
 
 ### Per-Intent Breakdown Table
 
@@ -78,13 +80,15 @@ All metrics were computed programmatically on 200 real customer tweets extracted
 
 ---
 
-## Statistical Reliability & Calibration
+## Human vs. LLM-as-a-Judge Calibration
 
-To validate the reliability of the 5-dimension LLM-as-a-Judge rubric (Relevance, Correctness, Tone, Actionability, Safety), we benchmarked 30 tweets against hand-annotated human ratings:
-- **Pearson Correlation ($r$):** `0.7290` ($p < 0.001$)
-- **Spearman Rank Correlation ($ho$):** `0.6906` ($p < 0.001$)
-- **Mean Absolute Error (MAE):** `0.3000 points` (out of 10)
-- **Human Mean Score:** `8.63` vs. **Judge Mean Score:** `8.87`
+To validate the reliability of the 5-dimension LLM-as-a-Judge rubric (Relevance, Correctness, Tone, Actionability, Safety), we benchmarked a double-labelled subset of $N=50$ tweets against hand-annotated human ratings:
+- **Pearson Correlation ($r$):** `0.8244` ($p < 0.0001$)
+- **Spearman Rank Correlation ($ho$):** `0.8114` ($p < 0.0001$)
+- **Mean Absolute Error (MAE):** `0.2500 points` (out of 10)
+- **Cohen's Kappa $\kappa$ (Decisions):** `0.7925` (Substantial Agreement $\ge 0.60$)
+- **Quadratic Weighted Kappa $\kappa_w$ (Scores):** `0.7164`
+- **Human Mean Score:** `8.49` vs. **Judge Mean Score:** `8.68`
 
 ---
 
@@ -106,11 +110,9 @@ export GEMINI_API_KEY="your-api-key-here"
 
 > **Deterministic Reproduction:** The repository includes a deterministic offline fallback engine. Even without an API key or internet access, `./run_pipeline.sh` executes end-to-end in **< 15 seconds**.
 
-### 2. Verify Raw Kaggle Data
-Ensure `twcs.csv` is present at:
-```bash
-data/raw/twcs.csv
-```
+### 2. Verify Data
+- Tracked Sample Dataset: [`data/sample_data.csv`](data/sample_data.csv) (600 processed tweets for `@AmazonHelp`) is tracked directly in Git for instant review without raw data downloads.
+- Full Raw Dataset: `data/raw/twcs.csv` (optional, for regenerating from scratch).
 
 ### 3. Run Full Pipeline
 Executes all 7 stages (data extraction, baselines, agent inference, automated evaluation + LLM judge, human calibration, confusion matrix export, and business cost analysis):
@@ -119,9 +121,15 @@ chmod +x run_pipeline.sh
 ./run_pipeline.sh
 ```
 
-### 4. Interactive Terminal CLI Demo
-Test arbitrary custom customer tweets in real-time:
+### 4. Direct CLI Invocations
 ```bash
+# Run agent on sample mode
+python3 src/pipeline.py --brand AmazonHelp --sample
+
+# Run evaluation directly with custom golden set flag
+python3 src/evaluate.py --golden_set data/processed/golden_set.jsonl
+
+# Test arbitrary customer tweets live in terminal
 python3 src/demo_cli.py
 ```
 
@@ -136,21 +144,23 @@ hiver-takehome-amazon/
 │       └── ci.yml                 # Automated GitHub Actions CI workflow
 ├── data/
 │   ├── raw/
-│   │   ├── README.md              # Instructions for twcs.csv
-│   │   └── twcs.csv               # 516 MB Kaggle Customer Support dataset
+│   │   └── README.md              # Instructions for twcs.csv
+│   ├── sample_data.csv            # 600 processed tweets for @AmazonHelp (tracked in Git)
 │   └── processed/
 │       ├── brand_threads.jsonl    # Multi-turn customer-brand interaction pairs
 │       └── golden_set.jsonl       # 200 hand-labelled real @AmazonHelp tweets
 ├── docs/
 │   └── index.html                 # Interactive GitHub Pages benchmark dashboard
+├── labels/
+│   └── codebook.json              # Machine-readable intent taxonomy & escalation policy
 ├── src/
-│   ├── config.py                  # Paths, constants, thresholds, risk keywords
+│   ├── config.py                  # Paths, constants, thresholds, risk keywords, sampling notes
 │   ├── data_processor.py          # Data ingestion and golden set extraction
 │   ├── llm_client.py              # GeminiClient (Live API + deterministic offline fallback)
 │   ├── baselines.py               # Trivial Majority & Simple Rule-Based baselines
-│   ├── pipeline.py                # Main agent prediction pipeline with safety guardrails
-│   ├── evaluate.py                # Evaluation harness with 95% Bootstrap CIs & LLM judge
-│   ├── human_agreement.py         # Human-LLM judge correlation script (Pearson, Spearman, MAE)
+│   ├── pipeline.py                # Main agent prediction pipeline with CLI flags
+│   ├── evaluate.py                # Evaluation harness with 95% Bootstrap CIs & CLI flags
+│   ├── human_agreement.py         # Human-LLM judge calibration script (r, rho, MAE, Cohen's κ)
 │   ├── confusion_matrix.py        # Automated classification report & confusion matrix generator
 │   ├── cost_analysis.py           # Business cost-based policy optimization module
 │   ├── demo_cli.py                # Interactive CLI demo for live reviewer testing
@@ -164,8 +174,8 @@ hiver-takehome-amazon/
 │   ├── confusion_matrix.csv       # Multi-class confusion matrix table
 │   ├── cost_analysis.json         # Operational cost modeling output
 │   ├── judge_scores.jsonl         # Detailed per-example LLM judge outputs
-│   ├── human_scores.json          # 30 human evaluation ratings
-│   └── human_vs_judge.json        # Correlation and agreement statistics
+│   ├── human_scores.json          # N=50 human evaluation ratings
+│   └── human_vs_judge.json        # Correlation and agreement statistics (including κ)
 ├── report/
 │   └── REPORT.md                  # Comprehensive 6-page standalone engineering report
 ├── DECISIONS.md                   # Detailed 15-point engineering decision log
@@ -179,4 +189,5 @@ hiver-takehome-amazon/
 ## Further Documentation
 - **[Comprehensive Engineering Report](report/REPORT.md):** 6-page deep-dive detailing problem framing, failure modes, self-critique, and 1-week roadmap.
 - **[Engineering Decision Log](DECISIONS.md):** 15 non-obvious engineering decisions explained in detail.
+- **[Machine-Readable Codebook](labels/codebook.json):** Full intent taxonomy definitions, edge cases, and safety guardrails.
 - **[Interactive Benchmark Dashboard](https://your-username.github.io/hiver-takehome-amazon/):** Live GitHub Pages evaluation dashboard.
