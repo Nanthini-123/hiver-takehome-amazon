@@ -97,7 +97,7 @@ ho$):** `0.8114` ($p < 0.0001$)
 
 ### 1. Setup Environment
 ```bash
-git clone https://github.com/your-username/hiver-takehome-amazon.git
+git clone https://github.com/Nanthini-123/hiver-takehome-amazon.git
 cd hiver-takehome-amazon
 python3 -m venv venv
 source venv/bin/activate
