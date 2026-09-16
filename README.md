@@ -5,7 +5,7 @@
 [![Dataset](https://img.shields.io/badge/Dataset-Kaggle%20TWCS%20(Real)-orange.svg)](https://www.kaggle.com/datasets/thoughtvector/customer-support-on-twitter)
 [![Cohen's Kappa](https://img.shields.io/badge/%CE%BA%20(Decision)-0.7925%20(Substantial)-success.svg)](#human-vs-llm-as-a-judge-calibration)
 [![Pipeline Latency](https://img.shields.io/badge/Latency-%3C%2015s%20Deterministic-success.svg)](#quick-start-guide)
-[![Live Dashboard](https://img.shields.io/badge/Dashboard-GitHub%20Pages-purple.svg)](https://your-username.github.io/hiver-takehome-amazon/)
+[![Live Dashboard](https://img.shields.io/badge/Dashboard-GitHub%20Pages-purple.svg)](https://nanthini-123.github.io/hiver-takehome-amazon/)
 
 Production-ready prototype of an intelligent AI customer support agent for **@AmazonHelp**, evaluated on authentic Twitter support threads from the Kaggle **Customer Support on Twitter** dataset (`thoughtvector/customer-support-on-twitter`).
 
@@ -84,7 +84,8 @@ All metrics were computed programmatically on 200 real customer tweets extracted
 
 To validate the reliability of the 5-dimension LLM-as-a-Judge rubric (Relevance, Correctness, Tone, Actionability, Safety), we benchmarked a double-labelled subset of $N=50$ tweets against hand-annotated human ratings:
 - **Pearson Correlation ($r$):** `0.8244` ($p < 0.0001$)
-- **Spearman Rank Correlation ($ho$):** `0.8114` ($p < 0.0001$)
+- **Spearman Rank Correlation ($
+ho$):** `0.8114` ($p < 0.0001$)
 - **Mean Absolute Error (MAE):** `0.2500 points` (out of 10)
 - **Cohen's Kappa $\kappa$ (Decisions):** `0.7925` (Substantial Agreement $\ge 0.60$)
 - **Quadratic Weighted Kappa $\kappa_w$ (Scores):** `0.7164`
@@ -190,4 +191,4 @@ hiver-takehome-amazon/
 - **[Comprehensive Engineering Report](report/REPORT.md):** 6-page deep-dive detailing problem framing, failure modes, self-critique, and 1-week roadmap.
 - **[Engineering Decision Log](DECISIONS.md):** 15 non-obvious engineering decisions explained in detail.
 - **[Machine-Readable Codebook](labels/codebook.json):** Full intent taxonomy definitions, edge cases, and safety guardrails.
-- **[Interactive Benchmark Dashboard](https://your-username.github.io/hiver-takehome-amazon/):** Live GitHub Pages evaluation dashboard.
+- **[Interactive Benchmark Dashboard](https://Nanthini-123.github.io/hiver-takehome-amazon/):** Live GitHub Pages evaluation dashboard.
